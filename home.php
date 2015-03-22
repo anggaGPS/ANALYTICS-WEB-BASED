@@ -11,7 +11,7 @@ $echo = base64_decode($acak);
 	<td align="left" valign="top" style="padding-top:20px;" class="text_left"><div align="left">
 	  <p>Hello Google Map !!! <br />
 	      <br />
-	      Enterprise Support Ssytem <br />
+	      Enterprise Support System <br />
 	      <br />
         </p>
 	  <p align="center"><br />
