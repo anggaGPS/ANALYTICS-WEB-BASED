@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Peta Provinsi</title>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<style type="text/css">
+			html { height: 100% }
+			body { height: 100%; margin: 0; padding: 0 }
+			#title { height: 10%; width : 100%; }
+			#sidebar {height : 85% ; width : 20%; float : left}
+			#map_canvas { height : 85% ; width : 80%; float : right}
+		</style>
+		<script type="text/javascript"
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB6QymIKKv7qrk64Jk4riqIzUIv_0fvWT0&sensor=false">		
+		</script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>	
+		<link href="css/bootstrap.css" rel="stylesheet" media="screen">
+		<link href="css/bootstrap-responsive.css" rel="stylesheet" media="screen">
+		<script type="text/javascript">
+			var map,layer;var tampungKode1,tampungKode2,tampungKode3;
+			var infoWindow = new google.maps.InfoWindow();
+			function initialize() {
+				google.maps.visualRefresh = true;
+				var mapOptions = {
+					center: new google.maps.LatLng(-3.337954,117.320251),
+					zoom: 5,
+					mapTypeId: google.maps.MapTypeId.ROADMAP
+				};
+				map = new google.maps.Map(document.getElementById("map_canvas"),
+				mapOptions);																
+				
+				$.ajax({
+					type:'GET',						
+					url:'data.php',
+					dataType:'json',
+					success: function(data) {							
+						var kel1,kel2,kel3;
+						var min="";
+						var med="";
+						var max="";						
+						var jumlah,kode;						
+						for(var i=0;i<data.provinsi.length;i++)
+						{
+							jumlah=data.provinsi[i].jumlah;
+							kode=data.provinsi[i].kode;
+							if(jumlah<=3000000)
+							{
+								min+=kode+",";							
+							}
+							else if(jumlah>3000000&&jumlah<6000000)
+							{
+								med+=kode+",";
+							}
+							else if(jumlah>=6000000)
+							{
+								max+=kode+",";
+							}							
+						}					
+						fusiontablelayer(min,med,max);
+					}					
+				});				
+				var homeControlDiv=document.createElement('div');			
+				var homeControls=new legenda(homeControlDiv,map);
+				homeControlDiv.index = 1;
+				map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(homeControlDiv);
+				
+			}			
+			function fusiontablelayer(kode1,kode2,kode3)
+			{			
+				kode1=removeLastString(kode1);
+				kode2=removeLastString(kode2);
+				kode3=removeLastString(kode3);
+				tampungKode1=kode1;tampungKode2=kode2;tampungKode3=kode3;
+				layer = new google.maps.FusionTablesLayer({
+					query: {
+						select: 'geometry',
+						from: '12s5oKFfyL-G_orulSQXuqGvzMGr85H2p6YI5nRM',	
+						
+					},
+					options: {
+						suppressInfoWindows:true
+						},
+					styles: [{				
+						where: 'kode IN ('+kode1+')',
+						polygonOptions:{
+							fillColor:'#00FF00'
+						}
+						},{
+						where: 'kode IN ('+kode2+')',
+						polygonOptions:{
+							fillColor:'#FFFF00'
+						}
+						},{
+						where: 'kode IN ('+kode3+')',
+						polygonOptions:{
+							fillColor:'#FF0000'
+						}							
+					}]				
+				});
+				layer.setMap(map);	
+				google.maps.event.addListener(layer,'click',function(e){showData(e)});	
+			}
+			function removeLastString(kode)
+			{
+				kode = kode.substring(0,kode.length-1)+'';				
+				return kode;
+			}
+			//buat nambahin legenda		
+			function legenda(controlDiv,map){
+				controlDiv.style.backgroundColor = 'white';					
+				controlDiv.title = 'Legenda';	
+				var isi1 = "<table class=\"table table-condensed\"><th><td>Legenda</td></th>";
+				var isi2 = "<tr><td style=\"background-color:#00FF00\">&nbsp;&nbsp;&nbsp;</td><td><3 juta</td></tr>";
+				var isi3 = "<tr><td style=\"background-color:#FFFF00\">  </td><td>3-6 juta</td></tr>";
+				var isi4 = "<tr><td style=\"background-color:#FF0000\">  </td><td>>6 juta</td></tr>";							
+				var isi5 = "</table>";								
+				controlDiv.innerHTML = isi1+isi2+isi3+isi4+isi5;					
+			}
+			function layerByPulau(kodeWilayah)
+			{
+				
+				layer = new google.maps.FusionTablesLayer({
+					query: {
+						select: 'geometry',
+						from: '12s5oKFfyL-G_orulSQXuqGvzMGr85H2p6YI5nRM',
+						where: 'kode IN ('+kodeWilayah+')',
+					},
+					options: {
+						suppressInfoWindows:true
+						},
+					styles: [{				
+						where: 'kode IN ('+tampungKode1+')',
+						polygonOptions:{
+							fillColor:'#00FF00'
+						}
+						},{
+						where: 'kode IN ('+tampungKode2+')',
+						polygonOptions:{
+							fillColor:'#FFFF00'
+						}
+						},{
+						where: 'kode IN ('+tampungKode3+')',
+						polygonOptions:{
+							fillColor:'#FF0000'
+						}							
+					}],		
+				});
+				
+				layer.setMap(map);
+				google.maps.event.addListener(layer,'click',function(e){showData(e)});	
+			}
+			function showData(e)
+			{
+				var kodeBPS=e.row['kode'].value;
+				var location=e.latLng;
+				$.ajax({
+					type:'GET',						
+					url:'data.php',
+					dataType:'json',
+					success: function(data) {
+						var isi="";
+						for(var i=0;i<data.provinsi.length;i++)
+						{
+							if(data.provinsi[i].kode==kodeBPS)
+							{
+								isi+="<b>Provinsi : </b>"+data.provinsi[i].provinsi+"</br>";
+								isi+="<b>Ibukota : </b>"+data.provinsi[i].ibukota+"</br>";
+								isi+="<b>Jumlah Penduduk : </b>"+data.provinsi[i].jumlah+" Jiwa</br>";
+								$('#showdata').html(isi);
+								infoWindow.setContent("<b>"+data.provinsi[i].provinsi+"</b>");
+								infoWindow.setPosition(location);
+								infoWindow.open(map);
+							}
+						}
+					}
+				});
+				
+			}
+			$(document).ready(function(){				
+				$('input[name="pulau"]').on('change', function(){
+					layer.setMap(null);
+					var value=$(this).val();
+					var jawa="31,32,33,34,35,36";
+					var sumatera="11,12,13,15,16,17,18,14";
+					var kalimantan="61,62,63,64";
+					var sulawesi="71,72,73,74,75,76";
+					var papua="91,94";
+					switch(value)
+					{
+						case "Jawa":
+						layerByPulau(jawa);						
+						break;
+						case "Sumatera":
+						layerByPulau(sumatera);
+						break;
+						case "Kalimantan":
+						layerByPulau(kalimantan);
+						break;
+						case "Sulawesi":
+						layerByPulau(sulawesi);
+						break;
+						case "Papua":
+						layerByPulau(papua);
+						break;
+						default:					  
+					}
+				});
+			});
+		</script>
+	</head>
+	<body onload="initialize()">
+		<div id="title"><center><h1>Jumlah Penduduk Indonesia 2010</h1></center></div>
+		<div id="map_canvas"></div>
+		<div id="sidebar">
+			<legend>Provinsi By Pulau</legend>
+			<input type="radio" name="pulau" value="Jawa">Jawa<br>
+			<input type="radio" name="pulau" value="Sumatera">Sumatera</br>
+			<input type="radio" name="pulau" value="Kalimantan" >Kalimantan</br>
+			<input type="radio" name="pulau" value="Sulawesi">Sulawesi</br>			
+			<input type="radio" name="pulau" value="Papua">Papua</br></br>
+			<button onclick="initialize()" class="btn btn-primary">Show All</button>
+			</br></br>			
+			<pre>
+			<div id="showdata">
+			</pre>
+			</div>
+		</div>
+		<script src="js/bootstrap.js"></script>
+	</body>
+</html>
+

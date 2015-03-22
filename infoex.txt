@@ -1,0 +1,99 @@
+
+<?php
+	$entries=11;
+	$query=mysql_query("select * from view_informasi"); //input
+	$get_pages=mysql_num_rows($query);
+	
+	if ($get_pages>$entries)  //proses
+	{
+		$jumlah_halaman=ceil($get_pages/$entries);
+		$halaman_aktif=$_GET['id'];
+		
+		//untuk prev
+		if(($halaman_aktif)>0){
+			$prev=$halaman_aktif-1;
+			?><a href="?page=info-ujian&id=<?php  echo $prev; ?> " style="text-decoration:none"><font size="2" face="verdana" color="#009900"> &laquo;Prev&nbsp;&nbsp;</font></a><?php 
+		}
+		
+		//echo "Halaman : ";
+		$pages=1;
+		while($pages<=ceil($get_pages/$entries))
+		{
+			
+			//untuk menandai halaman yang aktif
+			if (($pages-1)==$halaman_aktif){
+				$font="<font size='2' face='verdana' color='red'>";
+			}else{
+				$font="<font size='2' face='verdana' color='#009900'>";
+			}
+		?>
+			
+		<?php 
+				$pages++;
+		}
+	}else{
+		$pages=0;
+	}
+	$jumlah_halaman=10;
+	//untuk next
+	if($pages<$jumlah_halaman){
+		$next=$pages+1;
+		?>&nbsp;&nbsp;<a href="?page=info-ujian&id=<?php  echo $next; ?> " 
+		style="text-decoration:none"><font size="2" face="verdana" color="#009900">Next&raquo;</font></a>
+<?php 
+	}
+	
+	//proses halaman
+	$page=(int)$pages;
+	$offset=$page*$entries;
+	$result=mysql_query("select * from view_informasi order by id_info asc limit $offset,$entries"); //output
+	$jumlah=mysql_num_rows($query);
+	
+	//akhir paging
+	echo "</center>";
+
+	if ($jumlah){
+	?>
+<div class="row" style="width:800px; margin:0 auto;">
+            <div class="col-lg-12">
+                <div class="table-responsive">
+		
+
+	<table cellpadding="0" cellspacing="0" border="0" id="table" class="sortable">
+		<thead>
+			<tr>
+				<th><h3>Aksi</h3></th>
+				<th><h3>ID Info</h3></th>
+				<th><h3>Kode Provinsi</h3></th>
+				<th><h3>Nama Provinsi</h3></th>
+				<th><h3>Nama Lokasi</h3></th>
+				<th><h3>Nama Ujian</h3></th>
+				<th><h3>Tanggal</h3></th>
+				<th><h3>Peserta</h3></th>
+				
+				
+		
+			</tr>
+		</thead>
+		<tbody>
+		 <?php
+			$query=mysql_query("SELECT * FROM view_informasi");					
+
+		
+			while($row=mysql_fetch_assoc($query)){
+				?>
+				<tr>
+					<td><img src="images/edit.png"> <a href="?page=info-ujian&mode=delete&id_info=<?php echo $row['id_info'];?>" onClick="return confirm('Apakah Anda Yakin?')"><img src="images/delete.png"></a></td>
+					
+					<td><?php echo $row['id_info'];?></td>
+					<td><?php echo $row['kode'];?></td>
+					<td><?php echo $row['provinsi'];?></td>
+					<td><?php echo $row['nama_lokasi'];?></td>
+					<td><?php echo $row['nama_ujian'];?></td>
+					<td><?php echo $row['tgl'];?></td>
+					<td><?php echo $row['peserta'];?></td>
+					
+				</tr>
+			<?php 
+                        $i++; 
+			} ?>
